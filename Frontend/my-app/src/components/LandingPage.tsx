@@ -20,6 +20,10 @@ const highlights = [
   },
 ]
 
+function scrollToSection(sectionId: string) {
+  document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
 export function LandingPage({ userName, onLogout }: LandingPageProps) {
   return (
     <main className="landing-shell">
@@ -44,12 +48,12 @@ export function LandingPage({ userName, onLogout }: LandingPageProps) {
           </p>
 
           <div className="landing-actions">
-            <a className="primary-button" href="#highlights">
+            <button className="primary-button" type="button" onClick={() => scrollToSection('highlights')}>
               Explore highlights
-            </a>
-            <a className="secondary-button secondary-button--link" href="#overview">
+            </button>
+            <button className="secondary-button secondary-button--link" type="button" onClick={() => scrollToSection('overview')}>
               View overview
-            </a>
+            </button>
           </div>
 
           <div className="stats" id="overview">
