@@ -1,0 +1,55 @@
+.profile-panel {
+  width: 320px;
+  flex-shrink: 0;
+  align-self: stretch;
+}
+
+.profile-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 14px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 100%;
+}
+
+.profile-name {
+  margin: 0 0 4px;
+  font-size: 20px;
+  color: #61dafb;
+}
+
+.profile-label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.profile-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.12);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.profile-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.profile-input:focus {
+  outline: none;
+  border-color: #61dafb;
+  box-shadow: 0 0 0 2px rgba(97, 218, 251, 0.2);
+}
+
+@media (max-width: 900px) {
+  .profile-panel {
+    width: 100%;
+  }
+}
+

@@ -40,6 +40,15 @@ public class UserEntity {
     @Column(length = 50)
     private String cfHandle;
 
+    @Column(length = 255)
+    private String lcProfileUrl;
+
+    @Column(length = 255)
+    private String cfProfileUrl;
+
+    @Column(length = 500)
+    private String selfDescription;
+
     @Builder.Default
     private int xp = 0;
 
