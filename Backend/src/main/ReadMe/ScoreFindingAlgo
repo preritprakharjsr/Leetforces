@@ -1,6 +1,5 @@
 score[p] =
     (2.0 * days_since_last_solved) +
-    (3.0 * (5 - confidence[p])) +
     (1.5 * difficulty of the question);
 
     days_since_last_solved: Number of days since the user last solved a problem in this topic.

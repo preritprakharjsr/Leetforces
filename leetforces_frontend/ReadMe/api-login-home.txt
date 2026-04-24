@@ -1,0 +1,50 @@
+LeetForces Frontend Notes
+=========================
+
+1) API Calls (Current Status)
+-----------------------------
+- Current frontend has no active API calls yet (no fetch/axios usage in main components).
+- Planned API calls (to add later):
+  - Save user profile links (LeetCode, Codeforces)
+  - Fetch dashboard/home data for the user
+  - Fetch user profile details
+
+Suggested placeholder endpoints:
+- POST /api/profile/links
+- GET /api/home
+- GET /api/profile
+
+2) Login Page (Planned, Not Implemented Yet)
+--------------------------------------------
+- Login page is not implemented right now.
+- Planned fields:
+  - Email or Username
+  - Password
+- Planned flow:
+  - User submits credentials
+  - Backend validates user
+  - Frontend stores auth token/session
+  - Redirect user to home/dashboard
+
+Suggested placeholder endpoints:
+- POST /api/auth/login
+- POST /api/auth/logout
+- GET /api/auth/me
+
+3) Home Page (Current)
+----------------------
+Current home page layout in frontend:
+- Top navigation bar with brand name "LeetForces" and a Settings button
+- Left panel (ProfileLinksPanel) with:
+  - Profile title
+  - LeetCode link input
+  - Codeforces link input
+- Main content area with:
+  - Heading: "Welcome to LeetForces"
+  - Text: "Your coding challenges platform"
+
+Relevant frontend files:
+- src/App.jsx
+- src/Navbar.jsx
+- src/ProfileLinksPanel.jsx
+

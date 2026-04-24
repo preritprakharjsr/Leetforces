@@ -1,33 +1,28 @@
 package com.LeetForce.Service;
 
 import com.LeetForce.Entity.ProblemEntity;
-import com.LeetForce.Entity.Enums.Difficulty;
+import com.LeetForce.Repository.ProblemRecommendationRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 @Service
 public class ProblemRecommendationService {
 
-    public int getProblemGapInDays(ProblemEntity problemEntity) {
-        if (problemEntity == null) {
-            throw new IllegalArgumentException("Problem recommendation must not be null");
-        }
+    private final ProblemRecommendationRepository problemRecommendationRepository;
 
-        LocalDateTime solvedAt = problemEntity.getSolvedAt();
-        if (solvedAt == null) {
-            return 0;
-        }
-
-        long gap = ChronoUnit.DAYS.between(solvedAt.toLocalDate(), LocalDate.now());
-        return (int) Math.max(gap, 0);
+    public ProblemRecommendationService(ProblemRecommendationRepository problemRecommendationRepository) {
+        this.problemRecommendationRepository = problemRecommendationRepository;
     }
 
-    public int getProblemDifficulty(ProblemEntity problemEntity) {
-        return problemEntity.getDifficulty() == Difficulty.EASY ? 1 :
-                problemEntity.getDifficulty() == Difficulty.MEDIUM ? 2 : 3;
+    public List<ProblemEntity> fetchTop10HighestPriorityProblems() {
+        return problemRecommendationRepository.findTop10ByOrderByPriorityDesc();
     }
 
+    public List<ProblemEntity> fetchProblems() {
+        return problemRecommendationRepository.findTop10ByOrderByPriorityDesc();
+    }
 }
