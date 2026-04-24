@@ -34,5 +34,4 @@ build/
 .vscode/
 
 ### Custom ignores ###
-*.txt
 src/main/Endpoints/

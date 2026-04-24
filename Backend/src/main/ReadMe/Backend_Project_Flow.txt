@@ -1,0 +1,202 @@
+LEETFORCE BACKEND - COMPLETE FLOW (CURRENT IMPLEMENTATION)
+=========================================================
+
+1) PROJECT STARTUP FLOW
+-----------------------
+1. Entry point is ProjectLeetForceApplication.main(...).
+2. Spring Boot scans package com.LeetForce and auto-registers:
+   - Configuration classes
+   - Controllers
+   - Services
+   - Repositories
+   - Entities
+3. WebConfig creates a WebClient bean named leetcodeClient with base URL:
+   https://leetcode.com
+4. JPA entities are managed by Hibernate and mapped to database tables.
+
+
+2) LAYERED ARCHITECTURE OVERVIEW
+--------------------------------
+Request -> Controller -> Service -> Repository -> Database
+                                -> External API (LeetCode GraphQL)
+
+- Controller layer:
+  UserController exists but is currently a placeholder (no endpoints yet).
+- Service layer:
+  Contains business logic for users, recommendations, LeetCode fetch, etc.
+- Repository layer:
+  Spring Data JPA interfaces for database operations.
+- Entity layer:
+  Persistent models (users, activity logs, recommendations, sync logs).
+- DTO + Mapper:
+  External response data is mapped to LeetcodeResponseDto.
+
+
+3) USER MANAGEMENT FLOW
+-----------------------
+Main class: UserService
+
+A) createUser(UserEntity user)
+- Validates user object and username.
+- Normalizes username (trim).
+- Checks uniqueness using UserRepository.existsByUsername(...).
+- Normalizes selfDescription (trim, null if empty, max 500 chars).
+- Saves via UserRepository.save(...).
+
+B) updateUser(Long userId, String newUsername, String selfDescription)
+- Finds user by ID.
+- If username is provided:
+  - trims/validates
+  - checks uniqueness excluding current user (existsByUsernameAndIdNot)
+- Updates selfDescription (same normalization rules).
+- Saves updated user.
+
+C) updateLcProfileLink(Long userId, String lcProfileUrl)
+D) updateCfProfileLink(Long userId, String cfProfileUrl)
+- Finds user by ID.
+- Normalizes URL:
+  - trim
+  - null if empty
+  - prepend https:// if protocol missing
+  - max 255 chars
+- Saves updated user.
+
+
+4) LEETCODE DATA FETCH FLOW (GRAPHQL)
+-------------------------------------
+Main classes:
+- LeetcodeResponseService
+- LeetcodeGraphqlQueries
+- LeetcodeResponseMapper
+- LeetcodeResponseDto
+
+Flow:
+1. Caller invokes fetchUserAndQuestionDetail(lcUsername).
+2. Service validates lcUsername.
+3. Service builds GraphQL request body using:
+   LeetcodeGraphqlQueries.USER_STATS_AND_RECENT_QUERY
+4. Service sends HTTP POST to https://leetcode.com/graphql.
+5. Non-2xx response throws IllegalStateException.
+6. Raw JSON response is passed to mapper:
+   leetcodeResponseMapper.mapToLeetcodeResponseDto(rawResponse)
+7. Mapper parses JSON and extracts:
+   - username
+   - solved counts by difficulty (EASY/MEDIUM/HARD)
+   - recent accepted submissions
+8. Mapper constructs LeetcodeResponseDto.
+
+DTO currently contains:
+- username
+- easyQuestions
+- mediumQuestion
+- hardQuestion
+- recentQuestion[] with fields:
+  - name (slug)
+  - title
+  - topic
+  - difficulty
+  - timestamp
+- totalActiveDays
+- totalCompetition
+- competitionRank
+
+Note:
+Some fields (topic, difficulty in recent questions, and contest/activity numbers)
+are currently initialized with defaults and can be enriched with additional queries
+already defined in LeetcodeGraphqlQueries.
+
+
+5) PROBLEM RECOMMENDATION FLOW
+------------------------------
+Main classes:
+- ProblemEntity
+- ProblemRecommendationRepository
+- ProblemRecommendationService
+
+A) Priority calculation (automatic)
+- In ProblemEntity, @PrePersist and @PreUpdate call refreshPriority().
+- Formula:
+  priority = (2.0 * daysSinceLastSolved) + (1.5 * difficultyValue)
+- difficultyValue mapping:
+  EASY=1.0, MEDIUM=2.0, HARD=3.0
+- Final priority is rounded and minimum 1.
+
+B) Fetch top recommendations
+- Repository method:
+  findTop10ByOrderByPriorityDesc()
+- Service exposes:
+  fetchTop10HighestPriorityProblems()
+  fetchProblems()
+- Both currently return top 10 by descending priority.
+
+
+6) ENTITY TO TABLE MAPPING SUMMARY
+----------------------------------
+A) UserEntity -> users
+- Core identity: id, username, email, password, role
+- Platform handles/links: lcUsername, cfHandle, lcProfileUrl, cfProfileUrl
+- Profile/game fields: selfDescription, xp, level, eloRating, streak
+- Tracking fields: lastSolvedDate, createdAt, lastSyncedAt
+
+B) ActivityLog -> activity_logs
+- user relation
+- platform, problemSlug, difficulty, topic, solvedAt
+
+C) ProblemEntity -> problem_recommendations
+- user relation
+- problemSlug, title, difficulty, topic, solvedAt
+- priority (auto-refreshed)
+- recommendation status
+
+D) SyncLogs -> sync_logs
+- id, user relation, status, syncAt
+- indexed by user_id
+
+
+7) REPOSITORY FLOW
+------------------
+- UserRepository extends JpaRepository<UserEntity, Long>
+  + existsByUsername(...)
+  + existsByUsernameAndIdNot(...)
+- ProblemRecommendationRepository extends JpaRepository<ProblemEntity, Long>
+  + findTop10ByOrderByPriorityDesc()
+- ActivityLogRepository extends JpaRepository<ActivityLog, Long>
+- SyncLogsRepository extends JpaRepository<SyncLogs, Long>
+
+Spring Data JPA auto-generates implementations at runtime.
+
+
+8) CURRENT PLACEHOLDERS / EXTENSION POINTS
+------------------------------------------
+- UserController is scaffolded and ready for endpoint methods.
+- ActivityLogService is scaffolded.
+- SyncLogsService is scaffolded.
+- CodeForcesService is scaffolded.
+
+Suggested next backend flow completion:
+1. Add REST endpoints in controllers.
+2. Connect endpoints to existing services.
+3. Add transaction boundaries and exception handling strategy.
+4. Add unit/integration tests for service and repository behavior.
+5. Replace manual JSON parser with ObjectMapper for robust mapping.
+
+
+9) END-TO-END EXAMPLE (TARGET EXECUTION PATH)
+----------------------------------------------
+Example: fetch LeetCode stats for a user
+1. HTTP request hits a future controller endpoint (to be added).
+2. Controller calls LeetcodeResponseService.fetchUserAndQuestionDetail(username).
+3. Service calls LeetCode GraphQL endpoint.
+4. Mapper converts API JSON into LeetcodeResponseDto.
+5. Controller returns DTO as HTTP JSON response.
+
+Example: get top 10 practice recommendations
+1. HTTP request hits a future recommendation endpoint (to be added).
+2. Controller calls ProblemRecommendationService.fetchTop10HighestPriorityProblems().
+3. Repository returns top 10 ordered by priority desc.
+4. Controller returns list to client.
+
+
+This document describes the current backend flow based on the present codebase
+and also marks where endpoint wiring is still pending.
+

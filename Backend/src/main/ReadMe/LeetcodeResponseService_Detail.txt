@@ -1,0 +1,137 @@
+LeetcodeResponseService - Detailed Explanation
+=============================================
+
+File:
+- src/main/java/com/LeetForce/Service/LeetcodeServices/LeetcodeResponseService.java
+
+Purpose
+-------
+LeetcodeResponseService is responsible for:
+1) Calling LeetCode's GraphQL API,
+2) Fetching user + question-related raw JSON data,
+3) Passing that raw JSON to the mapper,
+4) Returning a structured DTO (`LeetcodeResponseDto`).
+
+In short: service fetches data, mapper converts data.
+
+
+Main Method
+-----------
+Method: fetchUserAndQuestionDetail(String lcUsername)
+Return type: LeetcodeResponseDto
+
+Flow:
+1) Validate input username.
+   - If username is null/blank, throws IllegalArgumentException.
+
+2) Build GraphQL request variables.
+   - Uses: { "username": lcUsername }
+
+3) Execute GraphQL call.
+   - Calls private method executeGraphqlQuery(...)
+   - Query source: LeetcodeGraphqlQueries.USER_STATS_AND_RECENT_QUERY
+
+4) Map raw response to DTO.
+   - Calls: leetcodeResponseMapper.mapToLeetcodeResponseDto(rawResponse)
+   - Returns mapped `LeetcodeResponseDto`.
+
+
+Dependency Used
+---------------
+LeetcodeResponseService depends on:
+- LeetcodeResponseMapper
+  - Converts raw JSON string to `LeetcodeResponseDto`.
+- HttpClient (java.net.http.HttpClient)
+  - Sends POST request to LeetCode GraphQL endpoint.
+- LeetcodeGraphqlQueries
+  - Stores reusable GraphQL query strings.
+
+The mapper is injected in constructor:
+- public LeetcodeResponseService(LeetcodeResponseMapper leetcodeResponseMapper)
+
+
+GraphQL Request Details
+-----------------------
+Endpoint:
+- https://leetcode.com/graphql
+
+Method:
+- POST
+
+Header:
+- Content-Type: application/json
+
+Body format:
+- {
+    "query": "...graphql query...",
+    "variables": {
+      "username": "<leetcode_username>"
+    }
+  }
+
+The service manually builds JSON body with:
+- buildRequestBody(String query, Map<String, Object> variables)
+- escapeJson(String value)
+
+
+Private Methods in Service
+--------------------------
+1) executeGraphqlQuery(Map<String, Object> variables)
+   - Builds request JSON body.
+   - Sends HTTP request.
+   - Validates status code (must be 2xx).
+   - Returns response.body() as String.
+
+   Error handling:
+   - InterruptedException:
+     - Restores interrupted flag with Thread.currentThread().interrupt().
+     - Wraps and throws IllegalStateException.
+   - Any other Exception:
+     - Wraps and throws IllegalStateException.
+
+2) buildRequestBody(String query, Map<String, Object> variables)
+   - Creates JSON payload string manually.
+   - Inserts query and variables.
+
+3) escapeJson(String value)
+   - Escapes backslash, quotes, newline, carriage return.
+   - Prevents malformed JSON payload strings.
+
+4) asString(Object value)
+   - Converts object to String safely.
+
+
+DTO Mapping Result
+------------------
+After mapping, `LeetcodeResponseDto` can contain:
+- username
+- easyQuestions
+- mediumQuestion
+- hardQuestion
+- recentQuestion (list of nested RecentQuestion objects)
+- totalActiveDays
+- totalCompetition
+- competitionRank
+
+Note:
+- Service does not map fields itself.
+- Mapping responsibility is delegated to `LeetcodeResponseMapper`.
+
+
+Design Summary
+--------------
+Current design separates concerns cleanly:
+- Service: API communication + orchestration.
+- Mapper: JSON parsing + DTO conversion.
+- DTO: data contract returned to controller/client.
+
+This makes future changes easier (query changes, mapping changes, DTO updates).
+
+
+Related Files
+-------------
+- src/main/java/com/LeetForce/Service/LeetcodeServices/LeetcodeResponseService.java
+- src/main/java/com/LeetForce/Service/LeetcodeServices/LeetcodeGraphqlQueries.java
+- src/main/java/com/LeetForce/Mapper/LeetcodeResponseMapper.java
+- src/main/java/com/LeetForce/DTO/LeetcodeResponseDto.java
+
